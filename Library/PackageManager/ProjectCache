@@ -20,7 +20,7 @@ m_EmbeddedPackageManifests:
 m_LocalPackages:
   m_LocalFileStatus: []
 m_ProjectPath: C:/LANCE_DATA/Coding/Projects/unity-project/Packages
-m_EditorVersion: 2021.3.10f1 (1c7d0df0160b)
+m_EditorVersion: 2021.3.11f1 (0a5ca18544bf)
 m_ResolvedPackages:
 - packageId: com.unity.collab-proxy@1.17.2
   testable: 0
