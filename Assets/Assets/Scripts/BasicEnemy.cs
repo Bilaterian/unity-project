@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -46,6 +47,11 @@ public class BasicEnemy : MonoBehaviour
     [SerializeField]
     private float detectionSphereSize;
 
+    public LayerMask playerMask;
+    private bool playerInSight;
+    public Transform playerTransform;
+    private Transform lastSeenTransform;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -55,6 +61,20 @@ public class BasicEnemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        playerInSight = Physics.CheckSphere(transform.position, detectionSphereSize, playerMask);
+
+        if (playerInSight)
+        {
+            //go to player
+            GetComponent<NavMeshAgent>().destination = playerTransform.position;
+        }
+        else
+        {
+            //wander around
+        }
+
+        isGrounded = Physics.CheckSphere(groundCheck.position, checkSphereSize, groundMask);
+
         if (isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
