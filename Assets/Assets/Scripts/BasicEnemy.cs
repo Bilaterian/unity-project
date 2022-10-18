@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
+using static UnityEngine.GraphicsBuffer;
 
 public class BasicEnemy : MonoBehaviour
 {
@@ -30,8 +31,6 @@ public class BasicEnemy : MonoBehaviour
     private EnemyStats enemyStats;
     [SerializeField]
     private MovementStats enemyMoveStats;
-    [SerializeField]
-    private CharacterController controller;
 
     private float xRotation = 0f;
     private Vector3 velocity;
@@ -51,22 +50,23 @@ public class BasicEnemy : MonoBehaviour
     private bool playerInSight;
     public Transform playerTransform;
     private Transform lastSeenTransform;
+    private NavMeshAgent agent;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        agent = GetComponent<NavMeshAgent>();
     }
 
     // Update is called once per frame
     void Update()
     {
         playerInSight = Physics.CheckSphere(transform.position, detectionSphereSize, playerMask);
-
+        
         if (playerInSight)
         {
             //go to player
-            GetComponent<NavMeshAgent>().destination = playerTransform.position;
+            agent.destination = playerTransform.position;
         }
         else
         {
@@ -81,6 +81,6 @@ public class BasicEnemy : MonoBehaviour
         }
 
         velocity.y = velocity.y + enemyMoveStats.gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+        agent.Move(velocity * Time.deltaTime);
     }
 }
