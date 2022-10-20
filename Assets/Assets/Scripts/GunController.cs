@@ -48,9 +48,16 @@ public class GunController : MonoBehaviour
             Debug.Log(hitInfo.transform.name);
 
             Targetable target = hitInfo.transform.GetComponent<Targetable>();
-            if(target != null)
+            
+            BasicEnemy target2 = hitInfo.transform.GetComponent<BasicEnemy>();
+
+            if (target != null)
             {
                 target.getHit(stats.damage);
+            }
+            else if(target2 != null)
+            {
+                target2.getHit(stats.damage);
             }
 
             if(hitInfo.rigidbody != null)
@@ -58,7 +65,10 @@ public class GunController : MonoBehaviour
                 hitInfo.rigidbody.AddForce(-hitInfo.normal * stats.knockback);
             }
 
-            Instantiate(hitEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+            if(target2 == null)
+            {
+                Instantiate(hitEffect, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+            }
         }
     }
 }

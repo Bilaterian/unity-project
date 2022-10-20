@@ -83,4 +83,19 @@ public class BasicEnemy : MonoBehaviour
         velocity.y = velocity.y + enemyMoveStats.gravity * Time.deltaTime;
         agent.Move(velocity * Time.deltaTime);
     }
+
+    public void getHit(int damageValue)
+    {
+        enemyStats.hitPoints = enemyStats.hitPoints - damageValue;
+
+        if (enemyStats.hitPoints <= 0)
+        {
+            kill();
+        }
+    }
+
+    private void kill()
+    {
+        Destroy(gameObject);
+    }
 }
