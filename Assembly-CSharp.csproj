@@ -61,6 +61,7 @@
     <Compile Include="Assets\Assets\Scripts\PlayerController.cs" />
     <Compile Include="Assets\Assets\Scripts\Targetable.cs" />
     <Compile Include="Assets\Assets\Scripts\Bullet_Hole.cs" />
+    <Compile Include="Assets\Assets\Scripts\LevelSpawner.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
