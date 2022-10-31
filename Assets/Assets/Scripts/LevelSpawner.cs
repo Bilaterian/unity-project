@@ -24,9 +24,11 @@ public class LevelSpawner : MonoBehaviour
     private List<Node> nodesList = new();
     private int choice = 0;
 
+    public int seed;
     // Start is called before the first frame update
     void Start()
     {
+        Random.InitState(seed);
         levelMap = new int[mapSize, mapSize];
         for(int i = 0; i < mapSize; i++)
         {
@@ -53,7 +55,7 @@ public class LevelSpawner : MonoBehaviour
                 {
                     GameObject newObj = Instantiate(wall);
                     newObj.transform.SetParent(transform);
-                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 1f, j * 2 + 0.5f);
+                    newObj.transform.localPosition = new Vector3(i + 0.5f, 1f, j + 0.5f);
                 }
             }
         }
@@ -80,6 +82,17 @@ public class LevelSpawner : MonoBehaviour
                         levelMap[j, k] = 0;
                     }
                 }
+                for(int j = nodesList[i].x.min; j < nodesList[i].x.max; j++)
+                {
+                    levelMap[j, nodesList[i].z.min] = 1;
+                    levelMap[j, nodesList[i].z.max - 1] = 1;
+                }
+                for(int k = nodesList[i].z.min; k < nodesList[i].z.max; k++)
+                {
+                    levelMap[nodesList[i].x.min, k] = 1;
+                    levelMap[nodesList[i].x.max - 1, k] = 1;
+                }
+
             }
         }
     }
