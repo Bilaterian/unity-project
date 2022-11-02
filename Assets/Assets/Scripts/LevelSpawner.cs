@@ -18,12 +18,10 @@ public class LevelSpawner : MonoBehaviour
 
     private Node _root = null;
     private List<Node> nodesList = new();
-    
-    private int choice = 0;
 
     public int seed;
 
-    private List<Color> colorList = new List<Color>();
+    private List<Color> colorList = new();
 
     // Start is called before the first frame update
     void Start()
@@ -38,15 +36,15 @@ public class LevelSpawner : MonoBehaviour
         {
             for(int j = 0; j < mapSize; j++)
             {
-                levelMap[i, j] = 0;
+                levelMap[i, j] = -1;
             }
         }
 
         AddRooms();
 
-        //FillMap();
+        FillMap();
 
-        DebugNodesList();
+        //DebugNodesList();
     }
 
     void FillMap()
@@ -61,6 +59,13 @@ public class LevelSpawner : MonoBehaviour
                     newObj.transform.SetParent(transform);
                     newObj.transform.localPosition = new Vector3(i + 0.5f, 1f, j + 0.5f);
                 }
+                else if(levelMap[i, j] == 2)
+                {
+                    Debug.Log("Player should spawn");
+                    GameObject newObj = Instantiate(player);
+                    newObj.transform.SetParent(transform);
+                    newObj.transform.localPosition = new Vector3(i + 0.5f, 1f, j + 0.5f);
+                }
             }
         }
     }
@@ -70,25 +75,55 @@ public class LevelSpawner : MonoBehaviour
         int treeDepth = (int)Mathf.Ceil(Mathf.Log(roomCount, 2));
         Insert(0, treeDepth);
 
+        int toRemove = (int)Mathf.Pow(2, treeDepth) - roomCount;
+        if(toRemove > 0){
+            int i = 0;
+            while(toRemove > 0)
+            {
+                if (nodesList[i % nodesList.Count].isLeaf == true && Random.Range(0,2) == 0)
+                {
+                    nodesList[i % nodesList.Count].isLeaf = false;
+                }
+                toRemove = CountLeafs() - roomCount;
+                i++;
+            }
+        }
+
         int counter = 0;
         for (int i = 0; i < nodesList.Count; i++)
         {
             if (nodesList[i].isLeaf == true && counter < roomCount)
             {
                 counter++;
-                /*for(int j = nodesList[i].x.min; j < nodesList[i].x.max; j++)
+                int xabsDiv = (nodesList[i].x.max - nodesList[i].x.min) / 20;
+                int zabsDiv = (nodesList[i].z.max - nodesList[i].z.min) / 20;
+                nodesList[i].x.min = nodesList[i].x.min + Random.Range(1, xabsDiv);
+                nodesList[i].x.max = nodesList[i].x.max - Random.Range(1, xabsDiv);
+                nodesList[i].z.min = nodesList[i].z.min + Random.Range(1, zabsDiv);
+                nodesList[i].z.max = nodesList[i].z.max - Random.Range(1, zabsDiv);
+
+                for(int j = nodesList[i].x.min; j < nodesList[i].x.max; j++)
                 {
                     for(int k = nodesList[i].z.min; k < nodesList[i].z.max; k++)
                     {
                         levelMap[j, k] = 0;
                     }
-                }*/
-                for(int j = nodesList[i].x.min; j < nodesList[i].x.max; j++)
+                }
+
+                if(counter == 1)
+                {
+                    int midx = (nodesList[i].x.max - nodesList[i].x.min) / 2 + nodesList[i].x.min;
+                    int midz = (nodesList[i].z.max - nodesList[i].z.min) / 2 + nodesList[i].z.min;
+                    levelMap[midx , midz] = 2;
+                    Debug.Log("2 has been placed at: " + midx + " " + midz);
+                }
+
+                for (int j = nodesList[i].x.min; j < nodesList[i].x.max; j++)
                 {
                     levelMap[j, nodesList[i].z.min] = 1;
                     levelMap[j, nodesList[i].z.max - 1] = 1;
 
-                    GameObject newObj = Instantiate(wall);
+                    /*GameObject newObj = Instantiate(wall);
                     newObj.transform.SetParent(transform);
                     newObj.transform.localPosition = new Vector3(j + 0.5f, 1f, nodesList[i].z.min + 0.5f);
                     newObj.GetComponent<Renderer>().material.SetColor("_Color", colorList[counter % colorList.Count]);
@@ -96,14 +131,14 @@ public class LevelSpawner : MonoBehaviour
                     GameObject newObj1 = Instantiate(wall);
                     newObj1.transform.SetParent(transform);
                     newObj1.transform.localPosition = new Vector3(j + 0.5f, 1f, nodesList[i].z.max - 1 + 0.5f);
-                    newObj1.GetComponent<Renderer>().material.SetColor("_Color", colorList[counter % colorList.Count]);
+                    newObj1.GetComponent<Renderer>().material.SetColor("_Color", colorList[counter % colorList.Count]);*/
                 }
                 for(int k = nodesList[i].z.min; k < nodesList[i].z.max; k++)
                 {
                     levelMap[nodesList[i].x.min, k] = 1;
                     levelMap[nodesList[i].x.max - 1, k] = 1;
 
-                    GameObject newObj = Instantiate(wall);
+                    /*GameObject newObj = Instantiate(wall);
                     newObj.transform.SetParent(transform);
                     newObj.transform.localPosition = new Vector3(nodesList[i].x.min + 0.5f, 1f, k + 0.5f);
                     newObj.GetComponent<Renderer>().material.SetColor("_Color", colorList[counter % colorList.Count]);
@@ -111,9 +146,8 @@ public class LevelSpawner : MonoBehaviour
                     GameObject newObj1 = Instantiate(wall);
                     newObj1.transform.SetParent(transform);
                     newObj1.transform.localPosition = new Vector3(nodesList[i].x.max - 1 + 0.5f, 1f, k + 0.5f);
-                    newObj1.GetComponent<Renderer>().material.SetColor("_Color", colorList[counter % colorList.Count]);
+                    newObj1.GetComponent<Renderer>().material.SetColor("_Color", colorList[counter % colorList.Count]);*/
                 }
-
             }
         }
     }
@@ -133,28 +167,26 @@ public class LevelSpawner : MonoBehaviour
         int zmin = root.z.min;
         int zmax = root.z.max;
 
-        if (choice == 0)
+        if (xmax - xmin > zmax - zmin)
         {
-            choice = 1;
             //split horizontally
-            int newxmax = ((xmax - xmin) / 2) + xmin + Random.Range(targetDepth * (-1), targetDepth);
+            int newxmax = ((xmax - xmin) / 2) + xmin + Random.Range((xmax - xmin) / 4 * (-1), (xmax - xmin) / 4);
 
             root.isLeaf = false;
             root.leftNode = new Node(new Coordinates(xmin, newxmax), new Coordinates(zmin, zmax));
             nodesList.Add(root.leftNode);
-            root.rightNode = new Node(new Coordinates(newxmax + 1, xmax), new Coordinates(zmin, zmax));
+            root.rightNode = new Node(new Coordinates(newxmax, xmax), new Coordinates(zmin, zmax));
             nodesList.Add(root.rightNode);
         }
         else
         {
-            choice = 0;
             //split vertically
-            int newzmax = ((zmax - zmin) / 2) + zmin + Random.Range(targetDepth * (-1), targetDepth); ;
+            int newzmax = ((zmax - zmin) / 2) + zmin + Random.Range((zmax - zmin) / 4 * (-1), (zmax - zmin) / 4); ;
 
             root.isLeaf = false;
             root.leftNode = new Node(new Coordinates(xmin, xmax), new Coordinates(zmin, newzmax));
             nodesList.Add(root.leftNode);
-            root.rightNode = new Node(new Coordinates(xmin, xmax), new Coordinates(newzmax + 1, zmax));
+            root.rightNode = new Node(new Coordinates(xmin, xmax), new Coordinates(newzmax, zmax));
             nodesList.Add(root.rightNode);
         }
 

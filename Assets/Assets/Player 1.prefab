@@ -5329,10 +5329,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   stats:
-    damage: 10
+    damage: 20
     range: 25
     knockback: 100
-    firerate: 0.5
+    firerate: 1
   camera: {fileID: 3801425977269291669}
   muzzleFlash: {fileID: 3801425977955379824}
   hitEffect: {fileID: 5374431075381339954, guid: 9e7583fec7fd39642977ffca1659e4b1, type: 3}
