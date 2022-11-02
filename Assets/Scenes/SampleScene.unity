@@ -176,7 +176,7 @@ MonoBehaviour:
   roomCount: 33
   caveCycles: 100
   minNeighbors: 3
-  maxNeighbors: 7
+  maxNeighbors: 6
   seed: 0
 --- !u!1 &533943709
 GameObject:
