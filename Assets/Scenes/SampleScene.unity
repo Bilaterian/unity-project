@@ -147,7 +147,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 389216859}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -100, y: 0, z: -100}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -170,8 +170,13 @@ MonoBehaviour:
   wall: {fileID: 5123161223666937770, guid: 074e51669b9c06e4c95f16ee291a7e55, type: 3}
   player: {fileID: 3801425979002888758, guid: e0d975fc6b026e04a9a406208b784bf6, type: 3}
   enemy: {fileID: 6162693675675243169, guid: 1f40e226c18692a49b37620a01e8b677, type: 3}
-  mapSize: 200
-  roomCount: 25
+  crate: {fileID: 5152366481764654466, guid: 8b99714d60167fe4389c8598c3acff42, type: 3}
+  caveWall: {fileID: 8705344600495742442, guid: 31a9b82f44a83244d95921e31186656a, type: 3}
+  mapSize: 100
+  roomCount: 33
+  caveCycles: 100
+  minNeighbors: 3
+  maxNeighbors: 7
   seed: 0
 --- !u!1 &533943709
 GameObject:
@@ -264,7 +269,7 @@ Transform:
   m_GameObject: {fileID: 533943709}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 200, y: 0.1, z: 200}
+  m_LocalScale: {x: 200, y: 1, z: 200}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

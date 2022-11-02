@@ -5133,7 +5133,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3801425979002888758}
-  m_LocalRotation: {x: -0, y: 0.71953523, z: -0, w: 0.6944559}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 1.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -5142,7 +5142,7 @@ Transform:
   - {fileID: 3801425978533541575}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 92.032, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!33 &3801425979002888752
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -5206,8 +5206,8 @@ CharacterController:
   serializedVersion: 2
   m_Height: 2
   m_Radius: 0.5
-  m_SlopeLimit: 40
-  m_StepOffset: 1
+  m_SlopeLimit: 20
+  m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
@@ -5329,10 +5329,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   stats:
-    damage: 20
+    damage: 25
     range: 25
     knockback: 100
-    firerate: 1
+    firerate: 4
   camera: {fileID: 3801425977269291669}
   muzzleFlash: {fileID: 3801425977955379824}
   hitEffect: {fileID: 5374431075381339954, guid: 9e7583fec7fd39642977ffca1659e4b1, type: 3}

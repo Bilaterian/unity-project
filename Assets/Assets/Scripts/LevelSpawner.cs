@@ -10,14 +10,23 @@ public class LevelSpawner : MonoBehaviour
     public GameObject wall;
     public GameObject player;
     public GameObject enemy;
+    public GameObject crate;
+    public GameObject caveWall;
 
     public int mapSize;
     public int roomCount;
+    public int caveCycles;
 
     private int[,] levelMap;
+    private int[,] caveMap;
+    private readonly int[] weights = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+                             1, 1, 1, 0, 0, 0, 0, 0, 0, 0};
 
     private Node _root = null;
     private List<Node> nodesList = new();
+
+    public int minNeighbors = 0;
+    public int maxNeighbors = 0;
 
     public int seed;
 
@@ -30,7 +39,6 @@ public class LevelSpawner : MonoBehaviour
 
         InitColorList();
 
-
         levelMap = new int[mapSize, mapSize];
         for(int i = 0; i < mapSize; i++)
         {
@@ -40,11 +48,33 @@ public class LevelSpawner : MonoBehaviour
             }
         }
 
+        caveMap = new int[mapSize, mapSize];
+        for (int i = 0; i < mapSize; i++)
+        {
+            for (int j = 0; j < mapSize; j++)
+            {
+                caveMap[i, j] = weights[Random.Range(0, weights.Length)] * 4;
+            }
+        }
+
         AddRooms();
+        AddCorridors();
+        PopulateCaveMap();
+
+        for (int i = 0; i < mapSize; i++)
+        {
+            for (int j = 0; j < mapSize; j++)
+            {
+                if (levelMap[i, j] == -1)
+                {
+                    levelMap[i, j] = caveMap[i, j];
+                }
+            }
+        }
 
         FillMap();
 
-        //DebugNodesList();
+        DebugNodesList();
     }
 
     void FillMap()
@@ -57,13 +87,25 @@ public class LevelSpawner : MonoBehaviour
                 {
                     GameObject newObj = Instantiate(wall);
                     newObj.transform.SetParent(transform);
-                    newObj.transform.localPosition = new Vector3(i + 0.5f, 1f, j + 0.5f);
+                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
                 }
                 else if(levelMap[i, j] == 2)
                 {
                     GameObject newObj = Instantiate(player);
                     newObj.transform.SetParent(transform);
-                    newObj.transform.localPosition = new Vector3(i + 0.5f, 1f, j + 0.5f);
+                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
+                }
+                else if (levelMap[i, j] == 3)
+                {
+                    GameObject newObj = Instantiate(crate);
+                    newObj.transform.SetParent(transform);
+                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 1f, j + 0.5f);
+                }
+                else if (levelMap[i, j] == 4)
+                {
+                    GameObject newObj = Instantiate(caveWall);
+                    newObj.transform.SetParent(transform);
+                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
                 }
             }
         }
@@ -94,8 +136,8 @@ public class LevelSpawner : MonoBehaviour
             if (nodesList[i].isLeaf == true && counter < roomCount)
             {
                 counter++;
-                int xabsDiv = (nodesList[i].x.max - nodesList[i].x.min) / 20;
-                int zabsDiv = (nodesList[i].z.max - nodesList[i].z.min) / 20;
+                int xabsDiv = nodesList[i].x.max / 20;
+                int zabsDiv = nodesList[i].z.max / 20;
                 nodesList[i].x.min = nodesList[i].x.min + Random.Range(1, xabsDiv);
                 nodesList[i].x.max = nodesList[i].x.max - Random.Range(1, xabsDiv);
                 nodesList[i].z.min = nodesList[i].z.min + Random.Range(1, zabsDiv);
@@ -243,6 +285,193 @@ public class LevelSpawner : MonoBehaviour
             new Color( 1f, 1f, 1f, 0.2f),
             new Color( 0f, 0f, 0f, 0.2f),
         };
+    }
+
+    void AddCorridors()
+    {
+        for (int i = nodesList.Count - 1; i > 1; i -= 2)
+        {
+            Node room1 = nodesList[i];
+            Node room2 = nodesList[i - 1];
+
+            int room1x = (room1.x.max - room1.x.min) / 2 + room1.x.min;
+            int room2x = (room2.x.max - room2.x.min) / 2 + room2.x.min;
+            int room1z = (room1.z.max - room1.z.min) / 2 + room1.z.min;
+            int room2z = (room2.z.max - room2.z.min) / 2 + room2.z.min;
+
+            int xdis = Mathf.Abs(room1x - room2x);
+            int vdis = Mathf.Abs(room1z - room2z);
+            
+            if(xdis > vdis)
+            {
+                for (int j = room2x; j < room1x; j++)
+                {
+                    if (levelMap[j, room2z] == 1 || levelMap[j, room2z] == -1)
+                    {
+                        levelMap[j, room2z] = 0;
+                    }
+                    if (levelMap[j, room2z - 1] == -1)
+                    {
+                        levelMap[j, room2z - 1] = 1;
+                    }
+                    if (levelMap[j, room2z + 1] == -1)
+                    {
+                        levelMap[j, room2z + 1] = 1;
+                    }
+                }
+                if (levelMap[room2x - 1, room1z] == -1)
+                {
+                    levelMap[room2x - 1, room1z] = 1;
+                    levelMap[room2x - 1, room1z + 1] = 1;
+                    levelMap[room2x - 1, room1z - 1] = 1;
+                    levelMap[room2x, room1z] = 3; 
+                }
+                if (levelMap[room1x, room1z] == -1)
+                {
+                    levelMap[room1x, room1z] = 1;
+                    levelMap[room1x, room1z + 1] = 1;
+                    levelMap[room1x, room1z - 1] = 1;
+                    levelMap[room1x - 1, room1z] = 3;
+                }
+            }
+            else
+            {
+                for (int j = room2z; j < room1z; j++)
+                {
+                    if (levelMap[room1x, j] == 1 || levelMap[room1x, j] == -1)
+                    {
+                        levelMap[room1x, j] = 0;
+                    }
+                    if (levelMap[room1x - 1, j] == -1)
+                    {
+                        levelMap[room1x - 1, j] = 1;
+                    }
+                    if (levelMap[room1x + 1, j] == -1)
+                    {
+                        levelMap[room1x + 1, j] = 1;
+                    }
+                }
+                if (levelMap[room1x, room2z - 1] == -1)
+                {
+                    levelMap[room1x, room2z - 1] = 1;
+                    levelMap[room1x + 1, room2z - 1] = 1;
+                    levelMap[room1x - 1, room2z - 1] = 1;
+                    levelMap[room1x, room2z] = 3;
+                }
+                if (levelMap[room1x, room1z] == -1)
+                {
+                    levelMap[room1x, room1z] = 1;
+                    levelMap[room1x - 1, room1z] = 1;
+                    levelMap[room1x + 1, room1z] = 1;
+                    levelMap[room1x, room1z - 1] = 3;
+                }
+            }
+        }
+    }
+
+    void PopulateCaveMap()
+    {
+        int[,] copyMap = new int[mapSize, mapSize];
+        for(int i = 0; i < caveCycles; i++)
+        {
+            for(int j = 0; j < mapSize; j++)
+            {
+                for(int k = 0; k < mapSize; k++)
+                {
+                    int numNeighbors = 0;
+                    if(j - 1 > 0 && k - 1 > 0)
+                    {
+                        if (caveMap[j - 1,k - 1] == 4)
+                        {
+                            numNeighbors++;
+                        }
+                    }
+                    if (j - 1 > 0)
+                    {
+                        if (caveMap[j - 1, k] == 4)
+                        {
+                            numNeighbors++;
+                        }
+                    }
+                    if (j - 1 > 0 && k + 1 < mapSize)
+                    {
+                        if (caveMap[j - 1, k + 1] == 4)
+                        {
+                            numNeighbors++;
+                        }
+                    }
+
+                    if (k - 1 > 0)
+                    {
+                        if (caveMap[j, k - 1] == 4)
+                        {
+                            numNeighbors++;
+                        }
+                    }
+                    if (k + 1 < mapSize)
+                    {
+                        if (caveMap[j, k + 1] == 4)
+                        {
+                            numNeighbors++;
+                        }
+                    }
+
+                    if (j + 1 < mapSize && k - 1 > 0)
+                    {
+                        if (caveMap[j + 1, k - 1] == 4)
+                        {
+                            numNeighbors++;
+                        }
+                    }
+                    if (j + 1 < mapSize)
+                    {
+                        if (caveMap[j + 1, k] == 4)
+                        {
+                            numNeighbors++;
+                        }
+                    }
+                    if (j + 1 < mapSize && k + 1 < mapSize)
+                    {
+                        if (caveMap[j + 1, k + 1] == 4)
+                        {
+                            numNeighbors++;
+                        }
+                    }
+
+                    if (numNeighbors > maxNeighbors)
+                    {
+                        copyMap[j, k] = 4;
+                    }
+                    else if (numNeighbors > minNeighbors)
+                    {
+                        copyMap[j, k] = 0;
+                    }
+                    else if (numNeighbors < 3)
+                    {
+                        copyMap[j, k] = 4;
+                    }
+                    else
+                    {
+                        copyMap[j, k] = 0;
+                    }
+                }
+            }
+            for(int j = 0; j < mapSize; j++)
+            {
+                for(int k = 0; k < mapSize; k++)
+                {
+                    caveMap[j, k] = copyMap[j, k];
+                }
+            }
+        }
+
+        for(int i = 0; i < mapSize; i++)
+        {
+            caveMap[0, i] = 4;
+            caveMap[mapSize - 1, i] = 4;
+            caveMap[i, 0] = 4;
+            caveMap[i, mapSize - 1] = 4;
+        }
     }
 }
 
