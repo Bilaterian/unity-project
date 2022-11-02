@@ -61,7 +61,6 @@ public class LevelSpawner : MonoBehaviour
                 }
                 else if(levelMap[i, j] == 2)
                 {
-                    Debug.Log("Player should spawn");
                     GameObject newObj = Instantiate(player);
                     newObj.transform.SetParent(transform);
                     newObj.transform.localPosition = new Vector3(i + 0.5f, 1f, j + 0.5f);
@@ -115,7 +114,6 @@ public class LevelSpawner : MonoBehaviour
                     int midx = (nodesList[i].x.max - nodesList[i].x.min) / 2 + nodesList[i].x.min;
                     int midz = (nodesList[i].z.max - nodesList[i].z.min) / 2 + nodesList[i].z.min;
                     levelMap[midx , midz] = 2;
-                    Debug.Log("2 has been placed at: " + midx + " " + midz);
                 }
 
                 for (int j = nodesList[i].x.min; j < nodesList[i].x.max; j++)
