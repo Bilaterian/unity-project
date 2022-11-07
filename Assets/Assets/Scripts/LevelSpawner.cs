@@ -12,6 +12,8 @@ public class LevelSpawner : MonoBehaviour
     public GameObject enemy;
     public GameObject crate;
     public GameObject caveWall;
+    public GameObject floor;
+    public GameObject caveFloor;
 
     public int mapSize;
     public int roomCount;
@@ -61,13 +63,19 @@ public class LevelSpawner : MonoBehaviour
                 }
                 else
                 {
-                    if (Random.Range(0, 100) < caveDensity)
+                    float sampleX = i * ((float)caveDensity / 100f);
+                    float sampleZ = j * ((float)caveDensity / 100f);
+                    if((int)(Mathf.PerlinNoise(sampleX, sampleZ) * 100) > caveDensity  * 2)
                     {
                         caveMap[i, j] = 4;
                     }
+                    else if((int)(Mathf.PerlinNoise(sampleX, sampleZ) * 100) > caveDensity)
+                    {
+                        caveMap[i, j] = -1;
+                    }
                     else
                     {
-                        caveMap[i, j] = 0;
+                        caveMap[i, j] = -2;
                     }
                 }
             }
@@ -90,7 +98,7 @@ public class LevelSpawner : MonoBehaviour
 
         FillMap();
 
-        DebugNodesList();
+        //DebugNodesList();
     }
 
     void FillMap()
@@ -99,23 +107,47 @@ public class LevelSpawner : MonoBehaviour
         {
             for (int j = 0; j < mapSize; j++)
             {
-                if(levelMap[i, j] == 1)
+                if (levelMap[i, j] == -1)
+                {
+                    GameObject newObj = Instantiate(caveFloor);
+                    newObj.transform.SetParent(transform);
+                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.5f, j * 2 + 0.5f);
+                }
+                else if (levelMap[i, j] == 0)
+                {
+                    GameObject newObj = Instantiate(floor);
+                    newObj.transform.SetParent(transform);
+                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.5f, j * 2 + 0.5f);
+                }
+                else if(levelMap[i, j] == 1)
                 {
                     GameObject newObj = Instantiate(wall);
                     newObj.transform.SetParent(transform);
                     newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
+
+                    GameObject newObj1 = Instantiate(floor);
+                    newObj1.transform.SetParent(transform);
+                    newObj1.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.5f, j * 2 + 0.5f);
                 }
                 else if(levelMap[i, j] == 2)
                 {
                     GameObject newObj = Instantiate(player);
                     newObj.transform.SetParent(transform);
-                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
+                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 1f, j * 2 + 0.5f);
+
+                    GameObject newObj1 = Instantiate(floor);
+                    newObj1.transform.SetParent(transform);
+                    newObj1.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.5f, j * 2 + 0.5f);
                 }
                 else if (levelMap[i, j] == 3)
                 {
                     GameObject newObj = Instantiate(crate);
                     newObj.transform.SetParent(transform);
                     newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 1f, j + 0.5f);
+
+                    GameObject newObj1 = Instantiate(floor);
+                    newObj1.transform.SetParent(transform);
+                    newObj1.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.5f, j * 2 + 0.5f);
                 }
                 else if (levelMap[i, j] == 4)
                 {
@@ -387,83 +419,7 @@ public class LevelSpawner : MonoBehaviour
 
     void PopulateCaveMap()
     {
-        for(int i = 0; i < caveCycles; i++)
-        {
-            for(int j = 1; j < mapSize - 1; j++)
-            {
-                for(int k = 1; k < mapSize - 1; k++)
-                {
-                    int numNeighbors = 0;
-                    if(j - 1 > 0 && k - 1 > 0)
-                    {
-                        if (caveMap[j - 1,k - 1] == 4)
-                        {
-                            numNeighbors++;
-                        }
-                    }
-                    if (j - 1 > 0)
-                    {
-                        if (caveMap[j - 1, k] == 4)
-                        {
-                            numNeighbors++;
-                        }
-                    }
-                    if (j - 1 > 0 && k + 1 < mapSize)
-                    {
-                        if (caveMap[j - 1, k + 1] == 4)
-                        {
-                            numNeighbors++;
-                        }
-                    }
-
-                    if (k - 1 > 0)
-                    {
-                        if (caveMap[j, k - 1] == 4)
-                        {
-                            numNeighbors++;
-                        }
-                    }
-                    if (k + 1 < mapSize)
-                    {
-                        if (caveMap[j, k + 1] == 4)
-                        {
-                            numNeighbors++;
-                        }
-                    }
-
-                    if (j + 1 < mapSize && k - 1 > 0)
-                    {
-                        if (caveMap[j + 1, k - 1] == 4)
-                        {
-                            numNeighbors++;
-                        }
-                    }
-                    if (j + 1 < mapSize)
-                    {
-                        if (caveMap[j + 1, k] == 4)
-                        {
-                            numNeighbors++;
-                        }
-                    }
-                    if (j + 1 < mapSize && k + 1 < mapSize)
-                    {
-                        if (caveMap[j + 1, k + 1] == 4)
-                        {
-                            numNeighbors++;
-                        }
-                    }
-
-                    if (numNeighbors > neighborThreshold)
-                    {
-                        caveMap[j, k] = 4;
-                    }
-                    else
-                    {
-                        caveMap[j, k] = 0;
-                    }
-                }
-            }
-        }
+        
     }
 }
 
