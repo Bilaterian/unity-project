@@ -16,17 +16,15 @@ public class LevelSpawner : MonoBehaviour
     public int mapSize;
     public int roomCount;
     public int caveCycles;
+    public int caveDensity;
 
     private int[,] levelMap;
     private int[,] caveMap;
-    private readonly int[] weights = {1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
-                             1, 1, 1, 0, 0, 0, 0, 0, 0, 0};
 
     private Node _root = null;
     private List<Node> nodesList = new();
 
-    public int minNeighbors = 0;
-    public int maxNeighbors = 0;
+    public int neighborThreshold;
 
     public int seed;
 
@@ -35,6 +33,10 @@ public class LevelSpawner : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (seed == 0) {
+            seed = (int)Time.time;
+        }
+
         Random.InitState(seed);
 
         InitColorList();
@@ -53,7 +55,21 @@ public class LevelSpawner : MonoBehaviour
         {
             for (int j = 0; j < mapSize; j++)
             {
-                caveMap[i, j] = weights[Random.Range(0, weights.Length)] * 4;
+                if(i == 0 || i == mapSize - 1 || j == 0 || j == mapSize - 1)
+                {
+                    caveMap[i, j] = 4;
+                }
+                else
+                {
+                    if (Random.Range(0, 100) < caveDensity)
+                    {
+                        caveMap[i, j] = 4;
+                    }
+                    else
+                    {
+                        caveMap[i, j] = 0;
+                    }
+                }
             }
         }
 
@@ -371,12 +387,11 @@ public class LevelSpawner : MonoBehaviour
 
     void PopulateCaveMap()
     {
-        int[,] copyMap = new int[mapSize, mapSize];
         for(int i = 0; i < caveCycles; i++)
         {
-            for(int j = 0; j < mapSize; j++)
+            for(int j = 1; j < mapSize - 1; j++)
             {
-                for(int k = 0; k < mapSize; k++)
+                for(int k = 1; k < mapSize - 1; k++)
                 {
                     int numNeighbors = 0;
                     if(j - 1 > 0 && k - 1 > 0)
@@ -438,39 +453,16 @@ public class LevelSpawner : MonoBehaviour
                         }
                     }
 
-                    if (numNeighbors > maxNeighbors)
+                    if (numNeighbors > neighborThreshold)
                     {
-                        copyMap[j, k] = 4;
-                    }
-                    else if (numNeighbors > minNeighbors)
-                    {
-                        copyMap[j, k] = 0;
-                    }
-                    else if (numNeighbors < 3)
-                    {
-                        copyMap[j, k] = 4;
+                        caveMap[j, k] = 4;
                     }
                     else
                     {
-                        copyMap[j, k] = 0;
+                        caveMap[j, k] = 0;
                     }
                 }
             }
-            for(int j = 0; j < mapSize; j++)
-            {
-                for(int k = 0; k < mapSize; k++)
-                {
-                    caveMap[j, k] = copyMap[j, k];
-                }
-            }
-        }
-
-        for(int i = 0; i < mapSize; i++)
-        {
-            caveMap[0, i] = 4;
-            caveMap[mapSize - 1, i] = 4;
-            caveMap[i, 0] = 4;
-            caveMap[i, mapSize - 1] = 4;
         }
     }
 }
