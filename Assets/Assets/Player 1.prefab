@@ -5233,7 +5233,7 @@ MonoBehaviour:
     forwardSpeed: 16
     backSpeed: 6
     strafeSpeed: 8
-    jumpHeight: 1.5
+    jumpHeight: 2.2
     sprintFactor: 1.2
     gravity: -20
   controller: {fileID: 3801425979002888756}

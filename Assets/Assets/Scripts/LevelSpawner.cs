@@ -14,11 +14,16 @@ public class LevelSpawner : MonoBehaviour
     public GameObject caveWall;
     public GameObject floor;
     public GameObject caveFloor;
+    public GameObject water;
 
     public int mapSize;
     public int roomCount;
-    public int caveCycles;
-    public int caveDensity;
+    public int floorFill;
+
+    public int octaves;
+    public float persistance;
+    public float lacunarity;
+    public Vector2 offset;
 
     private int[,] levelMap;
     private int[,] caveMap;
@@ -27,10 +32,12 @@ public class LevelSpawner : MonoBehaviour
     private List<Node> nodesList = new();
 
     public int neighborThreshold;
-
     public int seed;
 
     private List<Color> colorList = new();
+
+    private float minHeight = float.MaxValue;
+    private float maxHeight = float.MinValue;
 
     // Start is called before the first frame update
     void Start()
@@ -63,13 +70,34 @@ public class LevelSpawner : MonoBehaviour
                 }
                 else
                 {
-                    float sampleX = i * ((float)caveDensity / 100f);
-                    float sampleZ = j * ((float)caveDensity / 100f);
-                    if((int)(Mathf.PerlinNoise(sampleX, sampleZ) * 100) > caveDensity  * 2)
+                    float perlinHeight = 0f;
+                    float amplitude = 1f;
+                    float frequency = 1f;
+                    for(int k = 0; k < octaves; k++)
+                    {
+                        float sampleX = i * ((float)floorFill / 100f) * frequency;
+                        float sampleZ = j * ((float)floorFill / 100f) * frequency;
+                        float noiseValue = Mathf.PerlinNoise(sampleX, sampleZ) * 2 - 1;
+                        perlinHeight += noiseValue * amplitude;
+                        amplitude *= persistance;
+                        frequency *= lacunarity;
+                    }
+                    if(perlinHeight > maxHeight)
+                    {
+                        maxHeight = perlinHeight;
+                    }
+                    else if(perlinHeight < minHeight)
+                    {
+                        minHeight = perlinHeight;
+                    }
+
+                    perlinHeight = Mathf.InverseLerp(minHeight, maxHeight, perlinHeight) * 2 - 1;
+                    
+                    if((int)(perlinHeight * 100) > 0)
                     {
                         caveMap[i, j] = 4;
                     }
-                    else if((int)(Mathf.PerlinNoise(sampleX, sampleZ) * 100) > caveDensity)
+                    else if((int)(perlinHeight * 100) > (floorFill * -1))
                     {
                         caveMap[i, j] = -1;
                     }
@@ -83,7 +111,8 @@ public class LevelSpawner : MonoBehaviour
 
         AddRooms();
         AddCorridors();
-        PopulateCaveMap();
+        SmoothCaveMap(4);
+        SmoothCaveMap(-2);
 
         for (int i = 0; i < mapSize; i++)
         {
@@ -107,7 +136,17 @@ public class LevelSpawner : MonoBehaviour
         {
             for (int j = 0; j < mapSize; j++)
             {
-                if (levelMap[i, j] == -1)
+                if (levelMap[i, j] == -2)
+                {
+                    GameObject newObj = Instantiate(water);
+                    newObj.transform.SetParent(transform);
+                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.8f, j * 2 + 0.5f);
+
+                    GameObject newObj1 = Instantiate(caveFloor);
+                    newObj1.transform.SetParent(transform);
+                    newObj1.transform.localPosition = new Vector3(i * 2 + 0.5f, -2.5f, j * 2 + 0.5f);
+                }
+                else if (levelMap[i, j] == -1)
                 {
                     GameObject newObj = Instantiate(caveFloor);
                     newObj.transform.SetParent(transform);
@@ -154,6 +193,10 @@ public class LevelSpawner : MonoBehaviour
                     GameObject newObj = Instantiate(caveWall);
                     newObj.transform.SetParent(transform);
                     newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
+
+                    GameObject newObj1 = Instantiate(caveFloor);
+                    newObj1.transform.SetParent(transform);
+                    newObj1.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.5f, j * 2 + 0.5f);
                 }
             }
         }
@@ -417,9 +460,68 @@ public class LevelSpawner : MonoBehaviour
         }
     }
 
-    void PopulateCaveMap()
+    void SmoothCaveMap(int target)
     {
-        
+        int[,] copyMap = new int[mapSize, mapSize];
+        for(int i = 1; i < mapSize - 1; i++)
+        {
+            for(int j = 1; j < mapSize - 1; j++)
+            {
+                int numNeighbors = 0;
+                if (caveMap[i - 1, j - 1] == target)
+                {
+                    numNeighbors++;
+                }
+                if (caveMap[i - 1, j] == target)
+                {
+                    numNeighbors++;
+                }
+                if (caveMap[i - 1, j + 1] == target)
+                {
+                    numNeighbors++;
+                }
+                if (caveMap[i, j - 1] == target)
+                {
+                    numNeighbors++;
+                }
+                if (caveMap[i, j + 1] == target)
+                {
+                    numNeighbors++;
+                }
+                if (caveMap[i + 1, j - 1] == target)
+                {
+                    numNeighbors++;
+                }
+                if (caveMap[i + 1, j] == target)
+                {
+                    numNeighbors++;
+                }
+                if (caveMap[i + 1, j + 1] == target)
+                {
+                    numNeighbors++;
+                }
+
+                if (numNeighbors > neighborThreshold)
+                {
+                    copyMap[i, j] = target;
+                }
+                else
+                {
+                    copyMap[i, j] = -1;
+                }
+            }
+        }
+
+        for(int i = 1; i < mapSize - 1; i++)
+        {
+            for(int j = 1; j < mapSize -1; j++)
+            {
+                if (caveMap[i, j] == target)
+                {
+                    caveMap[i, j] = copyMap[i, j];
+                }
+            }
+        }
     }
 }
 

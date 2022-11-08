@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7383824014220900676}
   - component: {fileID: 5203579762525549920}
   - component: {fileID: 5441389115014994495}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cave Floor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
