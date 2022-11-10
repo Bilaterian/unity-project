@@ -23,7 +23,6 @@ public class LevelSpawner : MonoBehaviour
     public int octaves;
     public float persistance;
     public float lacunarity;
-    public Vector2 offset;
 
     private int[,] levelMap;
     private int[,] caveMap;
@@ -38,6 +37,10 @@ public class LevelSpawner : MonoBehaviour
 
     private float minHeight = float.MaxValue;
     private float maxHeight = float.MinValue;
+
+    public LayerMask lightMask1;
+    public LayerMask lightMask2;
+    public int lightSphereSize;
 
     // Start is called before the first frame update
     void Start()
@@ -140,7 +143,7 @@ public class LevelSpawner : MonoBehaviour
                 {
                     GameObject newObj = Instantiate(water);
                     newObj.transform.SetParent(transform);
-                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.8f, j * 2 + 0.5f);
+                    newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 0.3f, j * 2 + 0.5f);
 
                     GameObject newObj1 = Instantiate(caveFloor);
                     newObj1.transform.SetParent(transform);
@@ -522,6 +525,47 @@ public class LevelSpawner : MonoBehaviour
                 }
             }
         }
+    }
+
+    void addLights(int targetWall, int targetOpen, LayerMask light, GameObject lightSource)
+    {
+        for(int i = 0; i < mapSize; i++)
+        {
+            for(int j = 0; j < mapSize; i++)
+            {
+                if (levelMap[i,j] == targetWall)
+                {
+                    List<Coordinates> openSides = findOpenSides(new Coordinates(i, j), targetOpen);
+                    int index = Random.Range(0, openSides.Count);
+                    Vector3 toCheck = new Vector3(openSides[index].min * 2, 0f, openSides[index].max * 2);
+                    bool lightNearby = Physics.CheckSphere(toCheck, lightSphereSize, light);
+                    if (!lightNearby)
+                    {
+                        GameObject newObj = Instantiate(lightSource);
+                        newObj.transform.SetParent(transform);
+                        newObj.transform.localPosition = toCheck;
+                    }
+                }
+            }
+        }
+    }
+
+    List<Coordinates> findOpenSides(Coordinates wall, int target)
+    {
+        //east, north, west, south
+        Coordinates[] allSides = { new Coordinates(wall.min - 1, wall.max), new Coordinates(wall.min, wall.max + 1), 
+            new Coordinates(wall.min + 1, wall.max), new Coordinates(wall.min, wall.max - 1) };
+        List<Coordinates> openSides = new List<Coordinates>();
+
+        for(int i = 0; i < 4; i++)
+        {
+            if (levelMap[allSides[i].min,allSides[i].max] == target)
+            {
+                openSides.Add(allSides[i]);
+            }
+        }
+
+        return openSides;
     }
 }
 
