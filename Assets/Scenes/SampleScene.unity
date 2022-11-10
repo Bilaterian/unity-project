@@ -148,7 +148,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 389216859}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -100, y: 0, z: -100}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -181,9 +181,15 @@ MonoBehaviour:
   octaves: 32
   persistance: 0.5
   lacunarity: 0.5
-  offset: {x: 0, y: 0}
   neighborThreshold: 3
   seed: 1
+  lightMask1:
+    serializedVersion: 2
+    m_Bits: 256
+  lightMask2:
+    serializedVersion: 2
+    m_Bits: 128
+  lightSphereSize: 5
 --- !u!1 &533943709
 GameObject:
   m_ObjectHideFlags: 0
@@ -274,7 +280,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 533943709}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -4, z: 0}
+  m_LocalPosition: {x: 100, y: -4, z: 100}
   m_LocalScale: {x: 200, y: 1, z: 200}
   m_ConstrainProportionsScale: 0
   m_Children: []

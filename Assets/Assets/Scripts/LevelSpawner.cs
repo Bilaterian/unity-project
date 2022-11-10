@@ -1,9 +1,13 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using Unity.VisualScripting;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class LevelSpawner : MonoBehaviour
 {
@@ -28,7 +32,7 @@ public class LevelSpawner : MonoBehaviour
     private int[,] caveMap;
 
     private Node _root = null;
-    private List<Node> nodesList = new();
+    private readonly List<Node> nodesList = new();
 
     public int neighborThreshold;
     public int seed;
@@ -127,9 +131,9 @@ public class LevelSpawner : MonoBehaviour
                 }
             }
         }
-
         FillMap();
-
+        AddLights(1, 0, lightMask1);
+        AddLights(4, -1, lightMask2);
         //DebugNodesList();
     }
 
@@ -527,35 +531,46 @@ public class LevelSpawner : MonoBehaviour
         }
     }
 
-    void addLights(int targetWall, int targetOpen, LayerMask light, GameObject lightSource)
+    void AddLights(int targetWall, int targetOpen, LayerMask light)
     {
-        for(int i = 0; i < mapSize; i++)
+        for(int i = 1; i < mapSize - 1; i++)
         {
-            for(int j = 0; j < mapSize; i++)
+            for(int j = 1; j < mapSize - 1; j++)
             {
                 if (levelMap[i,j] == targetWall)
                 {
-                    List<Coordinates> openSides = findOpenSides(new Coordinates(i, j), targetOpen);
-                    int index = Random.Range(0, openSides.Count);
-                    Vector3 toCheck = new Vector3(openSides[index].min * 2, 0f, openSides[index].max * 2);
-                    bool lightNearby = Physics.CheckSphere(toCheck, lightSphereSize, light);
-                    if (!lightNearby)
+                    List<Coordinates> openSides = FindOpenSides(new Coordinates(i, j), targetOpen);
+                    if (openSides.Count > 0)
                     {
-                        GameObject newObj = Instantiate(lightSource);
-                        newObj.transform.SetParent(transform);
-                        newObj.transform.localPosition = toCheck;
+                        int index = Random.Range(0, openSides.Count);
+                        Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
+                        bool lightNearby = Physics.CheckSphere(toCheck, lightSphereSize, light);
+                        if (lightNearby == false)
+                        {
+                            Vector3 wall = new(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
+                            //Debug.Log("orig: " + toCheck/2 + " wall: " + wall/2 + " vector: " +(wall - toCheck) /2);
+                            Debug.DrawRay(toCheck, (wall - toCheck), colorList[i % colorList.Count],10000000f);
+                            if (Physics.Raycast(toCheck, (wall - toCheck)/2, out RaycastHit hitInfo, 2))
+                            {
+                                Debug.Log("Raycast hit something");
+                                if (hitInfo.transform.TryGetComponent<SpawnLight>(out var spawn))
+                                {
+                                    spawn.spawnObject(wall - toCheck);
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    List<Coordinates> findOpenSides(Coordinates wall, int target)
+    List<Coordinates> FindOpenSides(Coordinates wall, int target)
     {
         //east, north, west, south
         Coordinates[] allSides = { new Coordinates(wall.min - 1, wall.max), new Coordinates(wall.min, wall.max + 1), 
             new Coordinates(wall.min + 1, wall.max), new Coordinates(wall.min, wall.max - 1) };
-        List<Coordinates> openSides = new List<Coordinates>();
+        List<Coordinates> openSides = new();
 
         for(int i = 0; i < 4; i++)
         {

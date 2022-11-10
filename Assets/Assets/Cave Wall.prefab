@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 2533954309429573433}
   - component: {fileID: 3432463176115890566}
   - component: {fileID: 7536696061401542217}
+  - component: {fileID: 2154447680012278486}
+  - component: {fileID: 4449990935723545006}
   m_Layer: 0
   m_Name: Cave Wall
   m_TagString: Untagged
@@ -93,7 +95,34 @@ BoxCollider:
   m_GameObject: {fileID: 8705344600495742442}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2154447680012278486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8705344600495742442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6db9d488cdcf8144ac23896b6f91234, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  toSpawn: {fileID: 5902199411181108538, guid: 97551750428465248a84f8a1a96210ff, type: 3}
+--- !u!64 &4449990935723545006
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8705344600495742442}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 2
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}

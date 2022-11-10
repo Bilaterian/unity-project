@@ -357,6 +357,7 @@
 "Assets/Assets/Scripts/GunController.cs"
 "Assets/Assets/Scripts/LevelSpawner.cs"
 "Assets/Assets/Scripts/PlayerController.cs"
+"Assets/Assets/Scripts/SpawnLight.cs"
 "Assets/Assets/Scripts/Targetable.cs"
 -langversion:9.0
 
