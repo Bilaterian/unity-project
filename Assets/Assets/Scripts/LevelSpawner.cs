@@ -42,9 +42,7 @@ public class LevelSpawner : MonoBehaviour
     private float minHeight = float.MaxValue;
     private float maxHeight = float.MinValue;
 
-    public LayerMask lightMask1;
-    public LayerMask lightMask2;
-    public int lightSphereSize;
+    public int lightDistance;
 
     // Start is called before the first frame update
     void Start()
@@ -133,6 +131,7 @@ public class LevelSpawner : MonoBehaviour
         }
         FillMap();
         //DebugNodesList();
+        //DebugLevelMap();
     }
 
     void FillMap()
@@ -174,11 +173,14 @@ public class LevelSpawner : MonoBehaviour
                     {
                         int index = Random.Range(0, openSides.Count);
                         Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
-                        bool lightNearby = Physics.CheckSphere(toCheck, lightSphereSize, lightMask1);
-                        if (!lightNearby)
+
+                        bool lightNearby = LimitedFloodCheck(new Coordinates(i,j), lightDistance, 11);
+
+                        if (lightNearby == false)
                         {
+                            levelMap[i, j] = 11;
                             SpawnLight spawn = newObj.GetComponent<SpawnLight>();
-                            spawn.spawnObject(toCheck - newObj.transform.localPosition);
+                            spawn.SpawnObject((toCheck - newObj.transform.localPosition) / 2);
                         }
                     }
 
@@ -217,11 +219,14 @@ public class LevelSpawner : MonoBehaviour
                     {
                         int index = Random.Range(0, openSides.Count);
                         Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
-                        bool lightNearby = Physics.CheckSphere(toCheck, lightSphereSize, lightMask2);
-                        if (!lightNearby)
+
+                        bool lightNearby = LimitedFloodCheck(new Coordinates(i, j), lightDistance, 41);
+                        
+                        if (lightNearby == false)
                         {
+                            levelMap[i, j] = 41;
                             SpawnLight spawn = newObj.GetComponent<SpawnLight>();
-                            spawn.spawnObject(toCheck - newObj.transform.localPosition);
+                            spawn.SpawnObject((toCheck - newObj.transform.localPosition) / 2);
                         }
                     }
 
@@ -570,10 +575,39 @@ public class LevelSpawner : MonoBehaviour
                     openSides.Add(allSides[i]);
                 }
             }
-            
+        }
+        return openSides;
+    }
+
+    bool LimitedFloodCheck(Coordinates startPoint, int distance, int lightValue)
+    {
+        bool foundLight = false;
+
+        if(startPoint.min < 0 || startPoint.min >= mapSize || startPoint.max < 0 || startPoint.max >= mapSize)
+        {
+            return false;
+        }
+        else if(distance == 0)
+        {
+            if (levelMap[startPoint.min, startPoint.max] == lightValue)
+            {
+                foundLight = true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        //this will take a substantially longer time and would like to improve this using a djikstra map
+        else if(LimitedFloodCheck(new Coordinates(startPoint.min - 1, startPoint.max), distance - 1, lightValue) ||
+            LimitedFloodCheck(new Coordinates(startPoint.min + 1, startPoint.max), distance - 1, lightValue) ||
+            LimitedFloodCheck(new Coordinates(startPoint.min, startPoint.max - 1), distance - 1, lightValue) ||
+            LimitedFloodCheck(new Coordinates(startPoint.min, startPoint.max + 1), distance - 1, lightValue))
+        {
+            foundLight = true;
         }
 
-        return openSides;
+        return foundLight;
     }
 }
 

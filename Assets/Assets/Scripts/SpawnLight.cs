@@ -5,7 +5,7 @@ using UnityEngine;
 public class SpawnLight : MonoBehaviour
 {
     public GameObject toSpawn;
-    public void spawnObject(Vector3 offset)
+    public void SpawnObject(Vector3 offset)
     {
         GameObject newObj = Instantiate(toSpawn);
         newObj.transform.SetParent(transform);
