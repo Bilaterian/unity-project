@@ -132,8 +132,6 @@ public class LevelSpawner : MonoBehaviour
             }
         }
         FillMap();
-        AddLights(1, 0, lightMask1);
-        AddLights(4, -1, lightMask2);
         //DebugNodesList();
     }
 
@@ -171,6 +169,19 @@ public class LevelSpawner : MonoBehaviour
                     newObj.transform.SetParent(transform);
                     newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
 
+                    List<Coordinates> openSides = FindOpenSides(new Coordinates(i, j), 0);
+                    if (openSides.Count > 0)
+                    {
+                        int index = Random.Range(0, openSides.Count);
+                        Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
+                        bool lightNearby = Physics.CheckSphere(toCheck, lightSphereSize, lightMask1);
+                        if (!lightNearby)
+                        {
+                            SpawnLight spawn = newObj.GetComponent<SpawnLight>();
+                            spawn.spawnObject(toCheck - newObj.transform.localPosition);
+                        }
+                    }
+
                     GameObject newObj1 = Instantiate(floor);
                     newObj1.transform.SetParent(transform);
                     newObj1.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.5f, j * 2 + 0.5f);
@@ -200,6 +211,19 @@ public class LevelSpawner : MonoBehaviour
                     GameObject newObj = Instantiate(caveWall);
                     newObj.transform.SetParent(transform);
                     newObj.transform.localPosition = new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
+
+                    List<Coordinates> openSides = FindOpenSides(new Coordinates(i, j), -1);
+                    if (openSides.Count > 0)
+                    {
+                        int index = Random.Range(0, openSides.Count);
+                        Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
+                        bool lightNearby = Physics.CheckSphere(toCheck, lightSphereSize, lightMask2);
+                        if (!lightNearby)
+                        {
+                            SpawnLight spawn = newObj.GetComponent<SpawnLight>();
+                            spawn.spawnObject(toCheck - newObj.transform.localPosition);
+                        }
+                    }
 
                     GameObject newObj1 = Instantiate(caveFloor);
                     newObj1.transform.SetParent(transform);
@@ -530,41 +554,6 @@ public class LevelSpawner : MonoBehaviour
             }
         }
     }
-
-    void AddLights(int targetWall, int targetOpen, LayerMask light)
-    {
-        for(int i = 1; i < mapSize - 1; i++)
-        {
-            for(int j = 1; j < mapSize - 1; j++)
-            {
-                if (levelMap[i,j] == targetWall)
-                {
-                    List<Coordinates> openSides = FindOpenSides(new Coordinates(i, j), targetOpen);
-                    if (openSides.Count > 0)
-                    {
-                        int index = Random.Range(0, openSides.Count);
-                        Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
-                        bool lightNearby = Physics.CheckSphere(toCheck, lightSphereSize, light);
-                        if (lightNearby == false)
-                        {
-                            Vector3 wall = new(i * 2 + 0.5f, 2f, j * 2 + 0.5f);
-                            //Debug.Log("orig: " + toCheck/2 + " wall: " + wall/2 + " vector: " +(wall - toCheck) /2);
-                            Debug.DrawRay(toCheck, (wall - toCheck), colorList[i % colorList.Count],10000000f);
-                            if (Physics.Raycast(toCheck, (wall - toCheck)/2, out RaycastHit hitInfo, 2))
-                            {
-                                Debug.Log("Raycast hit something");
-                                if (hitInfo.transform.TryGetComponent<SpawnLight>(out var spawn))
-                                {
-                                    spawn.spawnObject(wall - toCheck);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     List<Coordinates> FindOpenSides(Coordinates wall, int target)
     {
         //east, north, west, south
@@ -574,10 +563,14 @@ public class LevelSpawner : MonoBehaviour
 
         for(int i = 0; i < 4; i++)
         {
-            if (levelMap[allSides[i].min,allSides[i].max] == target)
+            if (allSides[i].min > 0 && allSides[i].min < mapSize && allSides[i].max > 0 && allSides[i].max < mapSize) 
             {
-                openSides.Add(allSides[i]);
+                if (levelMap[allSides[i].min, allSides[i].max] == target)
+                {
+                    openSides.Add(allSides[i]);
+                }
             }
+            
         }
 
         return openSides;
