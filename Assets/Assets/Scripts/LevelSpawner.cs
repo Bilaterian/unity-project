@@ -55,14 +55,7 @@ public class LevelSpawner : MonoBehaviour
 
         InitColorList();
 
-        levelMap = new int[mapSize, mapSize];
-        for(int i = 0; i < mapSize; i++)
-        {
-            for(int j = 0; j < mapSize; j++)
-            {
-                levelMap[i, j] = -1;
-            }
-        }
+        levelMap = initMap(mapSize, -1);
 
         caveMap = new int[mapSize, mapSize];
         for (int i = 0; i < mapSize; i++)
@@ -132,6 +125,24 @@ public class LevelSpawner : MonoBehaviour
         FillMap();
         //DebugNodesList();
         //DebugLevelMap();
+        for (int i = 0; i < mapSize; i++)
+        {
+            for (int j = 0; j < mapSize; j++)
+            {
+                if (levelMap[i, j] == 11)
+                {
+                    GameObject newObj1 = Instantiate(floor);
+                    newObj1.transform.SetParent(transform);
+                    newObj1.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.5f, j * 2 + 0.5f);
+                }
+                else if(levelMap[i, j] == 41)
+                {
+                    GameObject newObj1 = Instantiate(caveFloor);
+                    newObj1.transform.SetParent(transform);
+                    newObj1.transform.localPosition = new Vector3(i * 2 + 0.5f, -0.5f, j * 2 + 0.5f);
+                }
+            }
+        }
     }
 
     void FillMap()
@@ -174,11 +185,16 @@ public class LevelSpawner : MonoBehaviour
                         int index = Random.Range(0, openSides.Count);
                         Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
 
-                        bool lightNearby = LimitedFloodCheck(new Coordinates(i,j), lightDistance, 11);
+                        int[,] dijkstraMap = initMap(lightDistance * 2 + 1, 0);
+                        int midPoint = (lightDistance * 2 + 1) / 2;
+                        dijkstraMap[midPoint, midPoint] = 1;
+                        bool lightNearby = LimitedFloodCheck(new Coordinates(i,j), lightDistance, 11,
+                            dijkstraMap, new Coordinates(midPoint, midPoint));
 
                         if (lightNearby == false)
                         {
-                            levelMap[i, j] = 11;
+                            Vector3 offset = (new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f) - toCheck) / 2;
+                            levelMap[i - (int)offset.x, j - (int)offset.z] = 11;
                             SpawnLight spawn = newObj.GetComponent<SpawnLight>();
                             spawn.SpawnObject((toCheck - newObj.transform.localPosition) / 2);
                         }
@@ -220,11 +236,17 @@ public class LevelSpawner : MonoBehaviour
                         int index = Random.Range(0, openSides.Count);
                         Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
 
-                        bool lightNearby = LimitedFloodCheck(new Coordinates(i, j), lightDistance, 41);
+                        int[,] dijkstraMap =  initMap(lightDistance * 2 + 1, 0);
+                        int midPoint = (lightDistance * 2 + 1) / 2;
+                        dijkstraMap[midPoint, midPoint] = 1;
+                        bool lightNearby = LimitedFloodCheck(new Coordinates(i, j), lightDistance, 41, 
+                            dijkstraMap, new Coordinates(midPoint, midPoint));
                         
                         if (lightNearby == false)
                         {
-                            levelMap[i, j] = 41;
+                            Vector3 offset = (new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f) - toCheck) / 2;
+
+                            levelMap[i - (int)offset.x, j - (int)offset.z] = 41;
                             SpawnLight spawn = newObj.GetComponent<SpawnLight>();
                             spawn.SpawnObject((toCheck - newObj.transform.localPosition) / 2);
                         }
@@ -579,15 +601,16 @@ public class LevelSpawner : MonoBehaviour
         return openSides;
     }
 
-    bool LimitedFloodCheck(Coordinates startPoint, int distance, int lightValue)
+    bool LimitedFloodCheck(Coordinates startPoint, int distance, int lightValue, int[,] dijkstraMap, Coordinates dCoord)
     {
         bool foundLight = false;
+        dijkstraMap[dCoord.min, dCoord.max] = 1;
 
-        if(startPoint.min < 0 || startPoint.min >= mapSize || startPoint.max < 0 || startPoint.max >= mapSize)
+        if (startPoint.min < 0 || startPoint.min >= mapSize || startPoint.max < 0 || startPoint.max >= mapSize)
         {
             return false;
         }
-        else if(distance == 0)
+        else if (distance == 0)
         {
             if (levelMap[startPoint.min, startPoint.max] == lightValue)
             {
@@ -598,16 +621,55 @@ public class LevelSpawner : MonoBehaviour
                 return false;
             }
         }
-        //this will take a substantially longer time and would like to improve this using a djikstra map
-        else if(LimitedFloodCheck(new Coordinates(startPoint.min - 1, startPoint.max), distance - 1, lightValue) ||
-            LimitedFloodCheck(new Coordinates(startPoint.min + 1, startPoint.max), distance - 1, lightValue) ||
-            LimitedFloodCheck(new Coordinates(startPoint.min, startPoint.max - 1), distance - 1, lightValue) ||
-            LimitedFloodCheck(new Coordinates(startPoint.min, startPoint.max + 1), distance - 1, lightValue))
+        else if (distance > 0) 
         {
-            foundLight = true;
+            bool check1 = false;
+            bool check2 = false;
+            bool check3 = false;
+            bool check4 = false;
+
+            if (dijkstraMap[dCoord.min - 1, dCoord.max] == 0)
+            {
+                check1 = LimitedFloodCheck(new Coordinates(startPoint.min - 1, startPoint.max), distance - 1, lightValue, 
+                    dijkstraMap, new Coordinates(dCoord.min - 1, dCoord.max));
+            }
+            if (dijkstraMap[dCoord.min + 1, dCoord.max] == 0)
+            {
+                check2 = LimitedFloodCheck(new Coordinates(startPoint.min + 1, startPoint.max), distance - 1, lightValue,
+                    dijkstraMap, new Coordinates(dCoord.min + 1, dCoord.max));
+            }
+            if (dijkstraMap[dCoord.min, dCoord.max - 1] == 0)
+            {
+                check3 = LimitedFloodCheck(new Coordinates(startPoint.min, startPoint.max - 1), distance - 1, lightValue,
+                    dijkstraMap, new Coordinates(dCoord.min, dCoord.max - 1));
+            }
+            if (dijkstraMap[dCoord.min, dCoord.max + 1] == 0)
+            {
+                check4 = LimitedFloodCheck(new Coordinates(startPoint.min, startPoint.max + 1), distance - 1, lightValue,
+                    dijkstraMap, new Coordinates(dCoord.min, dCoord.max + 1));
+            }
+            if (check1 == true || check2 == true || check3 == true || check4 == true)
+            {
+                return true;
+            }
         }
 
         return foundLight;
+    }
+
+    int[,] initMap(int mapSize, int initNum)
+    {
+        int[,] map = new int[mapSize, mapSize];
+
+        for(int i = 0; i < mapSize; i++)
+        {
+            for(int j = 0; j < mapSize; j++)
+            {
+                map[i, j] = initNum;
+            }
+        }
+
+        return map;
     }
 }
 
