@@ -9,7 +9,7 @@ using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class LevelSpawner : MonoBehaviour
+public partial class LevelSpawner : MonoBehaviour
 {
     public GameObject wall;
     public GameObject player;
@@ -55,7 +55,7 @@ public class LevelSpawner : MonoBehaviour
 
         InitColorList();
 
-        levelMap = initMap(mapSize, -1);
+        levelMap = InitMap(mapSize, -1);
 
         caveMap = new int[mapSize, mapSize];
         for (int i = 0; i < mapSize; i++)
@@ -185,11 +185,7 @@ public class LevelSpawner : MonoBehaviour
                         int index = Random.Range(0, openSides.Count);
                         Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
 
-                        int[,] dijkstraMap = initMap(lightDistance * 2 + 1, 0);
-                        int midPoint = (lightDistance * 2 + 1) / 2;
-                        dijkstraMap[midPoint, midPoint] = 1;
-                        bool lightNearby = LimitedFloodCheck(new Coordinates(i,j), lightDistance, 11,
-                            dijkstraMap, new Coordinates(midPoint, midPoint));
+                        bool lightNearby = LimitedFloodCheck(new Coordinates(i,j), lightDistance, 11);
 
                         if (lightNearby == false)
                         {
@@ -236,16 +232,11 @@ public class LevelSpawner : MonoBehaviour
                         int index = Random.Range(0, openSides.Count);
                         Vector3 toCheck = new(openSides[index].min * 2 + 0.5f, 2f, openSides[index].max * 2 + 0.5f);
 
-                        int[,] dijkstraMap =  initMap(lightDistance * 2 + 1, 0);
-                        int midPoint = (lightDistance * 2 + 1) / 2;
-                        dijkstraMap[midPoint, midPoint] = 1;
-                        bool lightNearby = LimitedFloodCheck(new Coordinates(i, j), lightDistance, 41, 
-                            dijkstraMap, new Coordinates(midPoint, midPoint));
+                        bool lightNearby = LimitedFloodCheck(new Coordinates(i, j), lightDistance, 41);
                         
                         if (lightNearby == false)
                         {
                             Vector3 offset = (new Vector3(i * 2 + 0.5f, 2f, j * 2 + 0.5f) - toCheck) / 2;
-
                             levelMap[i - (int)offset.x, j - (int)offset.z] = 41;
                             SpawnLight spawn = newObj.GetComponent<SpawnLight>();
                             spawn.SpawnObject((toCheck - newObj.transform.localPosition) / 2);
@@ -601,63 +592,54 @@ public class LevelSpawner : MonoBehaviour
         return openSides;
     }
 
-    bool LimitedFloodCheck(Coordinates startPoint, int distance, int lightValue, int[,] dijkstraMap, Coordinates dCoord)
+    bool LimitedFloodCheck(Coordinates startPoint, int distance, int lightValue)
     {
         bool foundLight = false;
-        dijkstraMap[dCoord.min, dCoord.max] = 1;
+        Queue<Dijkstra> toLook = new();
+        List<Dijkstra> lookedAt = new();
 
-        if (startPoint.min < 0 || startPoint.min >= mapSize || startPoint.max < 0 || startPoint.max >= mapSize)
-        {
-            return false;
-        }
-        else if (distance == 0)
-        {
-            if (levelMap[startPoint.min, startPoint.max] == lightValue)
-            {
-                foundLight = true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else if (distance > 0) 
-        {
-            bool check1 = false;
-            bool check2 = false;
-            bool check3 = false;
-            bool check4 = false;
+        toLook.Enqueue(new Dijkstra(startPoint.min, startPoint.max, distance));
 
-            if (dijkstraMap[dCoord.min - 1, dCoord.max] == 0)
+        while(toLook.Count > 0)
+        {
+            Dijkstra tile = toLook.Dequeue();
+
+            if(!(tile.x < 0 || tile.x > mapSize - 1 || tile.z < 0 || tile.z > mapSize - 1) && 
+                InQueue(lookedAt, tile) == false)
             {
-                check1 = LimitedFloodCheck(new Coordinates(startPoint.min - 1, startPoint.max), distance - 1, lightValue, 
-                    dijkstraMap, new Coordinates(dCoord.min - 1, dCoord.max));
+                if (levelMap[tile.x, tile.z] == lightValue)
+                {
+                    return true;
+                }
+                else if(tile.dist > 0)
+                {
+                    toLook.Enqueue(new Dijkstra(tile.x - 1, tile.z, tile.dist - 1));
+                    toLook.Enqueue(new Dijkstra(tile.x + 1, tile.z, tile.dist - 1));
+                    toLook.Enqueue(new Dijkstra(tile.x, tile.z - 1, tile.dist - 1));
+                    toLook.Enqueue(new Dijkstra(tile.x, tile.z + 1, tile.dist - 1));
+                }
+
+                lookedAt.Add(tile);
             }
-            if (dijkstraMap[dCoord.min + 1, dCoord.max] == 0)
-            {
-                check2 = LimitedFloodCheck(new Coordinates(startPoint.min + 1, startPoint.max), distance - 1, lightValue,
-                    dijkstraMap, new Coordinates(dCoord.min + 1, dCoord.max));
-            }
-            if (dijkstraMap[dCoord.min, dCoord.max - 1] == 0)
-            {
-                check3 = LimitedFloodCheck(new Coordinates(startPoint.min, startPoint.max - 1), distance - 1, lightValue,
-                    dijkstraMap, new Coordinates(dCoord.min, dCoord.max - 1));
-            }
-            if (dijkstraMap[dCoord.min, dCoord.max + 1] == 0)
-            {
-                check4 = LimitedFloodCheck(new Coordinates(startPoint.min, startPoint.max + 1), distance - 1, lightValue,
-                    dijkstraMap, new Coordinates(dCoord.min, dCoord.max + 1));
-            }
-            if (check1 == true || check2 == true || check3 == true || check4 == true)
-            {
-                return true;
-            }
+            Debug.Log(tile.dist);
         }
 
         return foundLight;
     }
 
-    int[,] initMap(int mapSize, int initNum)
+    bool InQueue(List<Dijkstra> lookedAt, Dijkstra toCheck)
+    {
+        for(int i = 0; i < lookedAt.Count; i++)
+        {
+            if(toCheck.x == lookedAt[i].x && toCheck.z == lookedAt[i].z)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    int[,] InitMap(int mapSize, int initNum)
     {
         int[,] map = new int[mapSize, mapSize];
 
@@ -671,33 +653,4 @@ public class LevelSpawner : MonoBehaviour
 
         return map;
     }
-}
-
-public class Node
-{
-    public Node leftNode;
-    public Node rightNode;
-    public Coordinates x;
-    public Coordinates z;
-    public bool isLeaf = true;
-    public Node( Coordinates x, Coordinates z){
-        leftNode = null;
-        rightNode = null;
-
-        this.x = x;
-        this.z = z;
-    }
-}
-
-public class Coordinates
-{
-    public int min;
-    public int max;
-
-    public Coordinates(int min, int max)
-    {
-        this.min = min;
-        this.max = max;
-    }
-
 }
