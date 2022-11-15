@@ -123,8 +123,6 @@ public partial class LevelSpawner : MonoBehaviour
             }
         }
         FillMap();
-        //DebugNodesList();
-        //DebugLevelMap();
         for (int i = 0; i < mapSize; i++)
         {
             for (int j = 0; j < mapSize; j++)
@@ -621,7 +619,6 @@ public partial class LevelSpawner : MonoBehaviour
 
                 lookedAt.Add(tile);
             }
-            Debug.Log(tile.dist);
         }
 
         return foundLight;
