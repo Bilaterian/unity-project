@@ -617,20 +617,83 @@ public partial class LevelSpawner : MonoBehaviour
                     toLook.Enqueue(new Dijkstra(tile.x, tile.z + 1, tile.dist - 1));
                 }
 
-                lookedAt.Add(tile);
+                lookedAt = ToAdd(lookedAt, tile);
             }
         }
 
         return foundLight;
     }
 
+    List<Dijkstra> ToAdd(List<Dijkstra> theList, Dijkstra item)
+    {
+        int min, max, midpoint;
+        min = 0;
+        max = theList.Count - 1;
+
+        while(min < max)
+        {
+            midpoint = (max - min) / 2 + min;
+            if (theList[midpoint].x < item.x)
+            {
+                max = midpoint;
+            }
+            else if (theList[midpoint].x > item.x)
+            {
+                min = midpoint;
+            }
+            else if(theList[midpoint].x == item.x)
+            {
+                if (theList[midpoint].z < item.z)
+                {
+                    max = midpoint;
+                }
+                else if (theList[midpoint].z > item.z)
+                {
+                    min = midpoint;
+                }
+            }
+            if(max - min < 1)
+            {
+                theList.Insert(midpoint, item);
+                break;
+            }
+        }
+
+        return theList;
+    }
+
     bool InQueue(List<Dijkstra> lookedAt, Dijkstra toCheck)
     {
-        for(int i = 0; i < lookedAt.Count; i++)
+        int min, max, midpoint;
+        min = 0;
+        max = lookedAt.Count - 1;
+        
+
+        while(min < max)
         {
-            if(toCheck.x == lookedAt[i].x && toCheck.z == lookedAt[i].z)
+            midpoint = (max - min) / 2 + min;
+            if(toCheck.x < lookedAt[midpoint].x)
             {
-                return true;
+                max = midpoint;
+            }
+            else if (toCheck.x > lookedAt[midpoint].x)
+            {
+                min = midpoint;
+            }
+            else if(toCheck.x == lookedAt[midpoint].x)
+            {
+                if (toCheck.z < lookedAt[midpoint].z)
+                {
+                    max = midpoint;
+                }
+                else if (toCheck.z > lookedAt[midpoint].z)
+                {
+                    min = midpoint;
+                }
+                else if(toCheck.z == lookedAt[midpoint].z)
+                {
+                    return true;
+                }
             }
         }
         return false;
